@@ -10,28 +10,20 @@ use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         $posts = Post::all();
         return view('posts.index', ['posts' => $posts]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('posts.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
-    {
+    {   
         $inputs = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required']
@@ -45,55 +37,53 @@ class PostController extends Controller
 
             $post->save();
 
-            return redirect('/post');
+            // 성공 응답 반환
+            return response()->json(['msg' => 'success']);
         } catch(Exception $e){
-            dd($e->getMessage());
+            // 실패 응답 반환
+            return response()->json(['msg' => 'failed', 'error' => $e->getMessage()]);
         }
-        
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $post = Post::find($id);
         return view('posts.show', ['post' => $post]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $post = Post::find($id);
-        return view('posts.update', ['post' => $post]);
+        return view('posts.updateForm', ['post' => $post]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        $post = post::find($id);
-
-        $inputs = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required']
+        // 유효성 검사
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'context' => 'required',
         ]);
-
-
-        $post->title = $inputs['title'];
-        $post->content = $inputs['content'];
-        $post->save();
-
-        $posts = Post::all();
-        return view('posts.index', ['posts' => $posts]);
+    
+        try {
+            // 모델 찾기
+            $post = Post::findOrFail($id);
+    
+            // 필드 업데이트
+            $post->update([
+                'title' => $request->title,
+                'content' => $request->context,
+            ]);
+    
+            // 성공 응답 반환
+            return redirect('/post/'.$id);
+        } catch (Exception $e) {
+            // 실패 응답 반환
+            return response()->json(['msg' => 'failed', 'error' => $e->getMessage()]);
+        }
     }
+    
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         Post::destroy($id);
@@ -101,4 +91,5 @@ class PostController extends Controller
         $posts = Post::all();
         return view('posts.index', ['posts' => $posts]);
     }
+
 }

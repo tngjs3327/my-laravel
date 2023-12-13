@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,3 +24,7 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 Route::resource('/post', PostController::class);
+Route::resource('post.comment', CommentController::class)->only(['store', 'update', 'destroy'])->shallow();
+
+Route::post('/uploadImage', [ImageController::class, 'uploadImage']);
+Route::post('/deleteImages', [ImageController::class, 'deleteImages']);
