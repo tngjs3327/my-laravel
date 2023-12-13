@@ -30,7 +30,10 @@ let editor = new Quill('#quill-editor',  {
     theme: 'snow', // 또는 'bubble'을 선택할 수 있습니다.
     placeholder: '내용을 입력하세요...',
     modules: {
-        toolbar: toolbarOptions,
+        toolbar: {
+            container : toolbarOptions,
+            handlers: { image: imageHandler },
+        },
         ImageResize: {parchment: Quill.import('parchment')},
     },
 });
@@ -43,7 +46,7 @@ let content = JSON.parse(jsonString);
 editor.setContents(content);
 sumImageList = extractionValue(editor.getContents());
 
-editor.getModule('toolbar').addHandler('image', async function () {
+function imageHandler() {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
@@ -80,7 +83,7 @@ editor.getModule('toolbar').addHandler('image', async function () {
             console.error('이미지 업로드 오류:', error);
         }
     };
-});
+};
 
 // 이미지 삭제 (fileList, Set타입 리스트, delete or other, 디렉토리 이름)
 const deleteImages = async (fileList, myImages, confirm) => {
@@ -135,19 +138,14 @@ window.addEventListener('beforeunload', () => {
     deleteImages(sumImageList, new Set(), 'delete');
 });
 
-submitBtn.addEventListener('click', function (event){
+document.querySelector('#update-form').addEventListener('submit', function (event){
     event.preventDefault();
     
-    const forms = document.querySelector('#update-form');
-
-    console.log(forms)
     const title = document.querySelector('#title').value;
     const context = document.querySelector('#context');
     const contentValue = editor.getContents().ops;
     const stringContent = JSON.stringify(contentValue);
     context.value = stringContent;
-    console.log(context.value);
-
 
     let currentImgList = extractionValue(contentValue);
 
@@ -160,7 +158,7 @@ submitBtn.addEventListener('click', function (event){
     } 
 
     sumImageList = [];
-    forms.submit();
+    this.submit();
     
 });
 

@@ -10,22 +10,6 @@ use Illuminate\Support\Facades\Auth;
 class CommentController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -41,29 +25,12 @@ class CommentController extends Controller
 
         $result = $comment->save();
 
-        if($result){
-            echo "성공";
-        } else{
-            echo "실패";
+        if ($result) {
+            // return response()->json(['message' => 'Comment created successfully']);
+            return redirect('/post/'.$comment->post_id);
+        } else {
+            return response()->json(['error' => 'Failed to create comment'], 500);
         }
-        return redirect('/post/'.$request->post_id);
-
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
     }
 
     /**
@@ -78,9 +45,13 @@ class CommentController extends Controller
         }
 
         $comment->content = $request->content;
-        $comment->save();
+        $result = $comment->save();
 
-        return response()->json(['message' => 'Comment updated successfully']);
+        if ($result) {
+            return response()->json(['message' => 'Comment updated successfully']);
+        } else {
+            return response()->json(['error' => 'Failed to update comment'], 500);
+        }
     }
 
     /**
@@ -88,14 +59,22 @@ class CommentController extends Controller
      */
     public function destroy(string $id)
     {
-        $comment = Comment::findOrFail($id);
+        $comment = Comment::find($id);
 
         if (!$comment) {
             return response()->json(['error' => 'Comment not found'], 404);
         }
 
-        $comment->delete();
+        $post = $comment->post;
 
-        return response()->json(['message' => 'Comment deleted successfully']);
+        $result = $comment->delete();
+
+        if ($result) {
+            // return view('boards.show', ['post' => $post]);
+            return response()->json(['message' => 'Comment deleted successfully']);
+            // return redirect('/post/'.$comment->post_id); // post도 삭제가 되버리네
+        } else {
+            return response()->json(['error' => 'Failed to delete comment'], 500);
+        }
     }
 }

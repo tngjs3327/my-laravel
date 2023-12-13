@@ -11,7 +11,7 @@
 
         <!-- nickname -->
         <div class="mt-4">
-            <x-input-label for="nickname" :value="__('NickName')" />
+            <x-input-label for="nickname" :value="__('닉네임')" />
             <x-text-input id="nickname" class="block mt-1 w-full" type="text" name="nickname" :value="old('nickname')" required autofocus autocomplete="nickname" />
             <x-input-error :messages="$errors->get('nickname')" class="mt-2" />
         </div>

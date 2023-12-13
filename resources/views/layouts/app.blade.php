@@ -29,7 +29,7 @@
             @endif
 
             <!-- Page Content -->
-            <main class="">
+            <main class="h-full pt-5 pb-36">
                 {{ $slot }}
             </main>
         </div>

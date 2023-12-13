@@ -13,7 +13,10 @@ class PostController extends Controller
 
     public function index()
     {
-        $posts = Post::all();
+        // $posts = Post::all();
+        // $posts->sortBy('created_at');
+        $posts = Post::orderBy('created_at', 'desc')->paginate(10);
+
         return view('posts.index', ['posts' => $posts]);
     }
 
@@ -25,20 +28,20 @@ class PostController extends Controller
     public function store(Request $request)
     {   
         $inputs = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'content' => ['required']
+            'title' => 'required|string|max:255',
+            'context' => 'required',
         ]);
 
         try{
             $post = new post();
             $post->title = $inputs['title'];
-            $post->content = $inputs['content'];
+            $post->content = $inputs['context'];
             $post->user_id = Auth::id();
 
             $post->save();
 
             // 성공 응답 반환
-            return response()->json(['msg' => 'success']);
+            return redirect('/post');
         } catch(Exception $e){
             // 실패 응답 반환
             return response()->json(['msg' => 'failed', 'error' => $e->getMessage()]);
@@ -47,13 +50,13 @@ class PostController extends Controller
 
     public function show(string $id)
     {
-        $post = Post::find($id);
+        $post = Post::find($id)->first();
         return view('posts.show', ['post' => $post]);
     }
 
     public function edit(string $id)
     {
-        $post = Post::find($id);
+        $post = Post::find($id)->first();
         return view('posts.updateForm', ['post' => $post]);
     }
 
@@ -87,9 +90,7 @@ class PostController extends Controller
     public function destroy(string $id)
     {
         Post::destroy($id);
-
-        $posts = Post::all();
-        return view('posts.index', ['posts' => $posts]);
+        return redirect('/post');
     }
 
 }
