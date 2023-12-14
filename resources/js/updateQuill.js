@@ -32,7 +32,7 @@ let editor = new Quill('#quill-editor',  {
     modules: {
         toolbar: {
             container : toolbarOptions,
-            handlers: { image: imageHandler },
+            // handlers: { image: imageHandler },
         },
         ImageResize: {parchment: Quill.import('parchment')},
     },
@@ -46,7 +46,7 @@ let content = JSON.parse(jsonString);
 editor.setContents(content);
 sumImageList = extractionValue(editor.getContents());
 
-function imageHandler() {
+editor.getModule('toolbar').addHandler('image', function(){
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
     input.setAttribute('accept', 'image/*');
@@ -70,20 +70,31 @@ function imageHandler() {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
-            const data = await response.json();
+            let data;
+
+            try {
+                // 서버 응답이 JSON인지 확인
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('서버에서 JSON 파싱 오류:', jsonError);
+
+                // JSON 파싱 실패 시에 대한 처리 추가
+                throw new Error('서버 응답이 JSON 형식이 아닙니다.');
+            }
 
             if (!data.url) {
                 throw new Error('Invalid response format');
             }
 
-            let range = editor.getSelection(true);
-            editor.insertEmbed(range.index, 'image', data.url);
+            let range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, 'image', data.url);
+            console.log(data.url);
             sumImageList.push(data.path);
         } catch (error) {
             console.error('이미지 업로드 오류:', error);
         }
     };
-};
+});
 
 // 이미지 삭제 (fileList, Set타입 리스트, delete or other, 디렉토리 이름)
 const deleteImages = async (fileList, myImages, confirm) => {
@@ -126,7 +137,7 @@ function extractionValue(items) {
     return currentImgList;
 };
 
-const submitBtn = document.querySelector('#submit-btn');
+const submitBtn = document.querySelector('#submit-btn-update');
 const cancelBtn = document.querySelector('#cancel-btn');
 
 cancelBtn.addEventListener('click', () => {
@@ -138,9 +149,10 @@ window.addEventListener('beforeunload', () => {
     deleteImages(sumImageList, new Set(), 'delete');
 });
 
-document.querySelector('#update-form').addEventListener('submit', function (event){
+submitBtn.addEventListener('onclick', function (event){
     event.preventDefault();
     
+    const forms = document.querySelector('#update-form').value;
     const title = document.querySelector('#title').value;
     const context = document.querySelector('#context');
     const contentValue = editor.getContents().ops;
@@ -158,8 +170,55 @@ document.querySelector('#update-form').addEventListener('submit', function (even
     } 
 
     sumImageList = [];
-    this.submit();
+    forms.submit();
     
 });
 
 
+// submitBtn.addEventListener('click', function (){
+    
+//     let formData = new FormData();
+    
+//     const title = document.querySelector('#title').value;
+//     const content = editor.getContents().ops;
+
+//     let currentImgList = extractionValue(content);
+
+//     if(currentImgList.length !== sumImageList.length){
+//         deleteImages(sumImageList, new Set(currentImgList), 'others');
+//     }
+
+//     if (title === '' || (( content.length === 1  && content[0]['insert'].trim() === ''))){
+//         return alert('입력창을 확인하세요');
+//     } 
+
+//     formData.append('title', title);
+//     formData.append('content', JSON.stringify(content));
+
+//     const updateUrl = '/post/' + postData.id;
+
+//     for (let [key, value] of formData.entries()) {
+//         console.log(`${key}: ${value}, ${typeof(value)}`);
+//     }
+    
+
+//     fetch(updateUrl, {
+//         method: 'put', // 요청 방식 지정(GET, POST 등)
+//         body: formData, // 서버로 보낼 데이터
+//         headers: {
+//             'Content-Type': 'multipart/form-data',
+//             'X-CSRF-TOKEN': csrfToken,
+//         },
+//     })
+//     .then(response => response.json()) // 응답을 JSON 형식으로 파싱
+//     .then(data => {
+//         console.log(data); // 파싱된 데이터 출력
+//         if(data.msg === 'success') {
+//             sumImageList = [];
+//             window.location.href = '/post'; // 원하는 페이지 URL로 변경해주세요.
+//         }
+//     })
+//     .catch(error => { 
+//         console.error('Error:', error);
+//     }); // 에러 처리
+// });

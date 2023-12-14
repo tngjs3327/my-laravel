@@ -32,63 +32,13 @@ let editor = new Quill('#quill-editor',  {
     modules: {
         toolbar: {
             container : toolbarOptions,
-            handlers: { image: imageHandler },
+            // handlers: { image: imageHandler },
         },
         ImageResize: {parchment: Quill.import('parchment')},
     },
 });
 
-function imageHandler(){
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-
-    input.onchange = async () => {
-        const file = input.files[0];
-        const formData = new FormData();
-        formData.append('image', file);
-
-        try {
-            const response = await fetch('/uploadImage', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            let data;
-
-            try {
-                // 서버 응답이 JSON인지 확인
-                data = await response.json();
-            } catch (jsonError) {
-                console.error('서버에서 JSON 파싱 오류:', jsonError);
-
-                // JSON 파싱 실패 시에 대한 처리 추가
-                throw new Error('서버 응답이 JSON 형식이 아닙니다.');
-            }
-
-            if (!data.url) {
-                throw new Error('Invalid response format');
-            }
-
-            let range = this.quill.getSelection(true);
-            this.quill.insertEmbed(range.index, 'image', data.url);
-            sumImageList.push(data.path);
-        } catch (error) {
-            console.error('이미지 업로드 오류:', error);
-        }
-    };
-};
-
-
-// editor.getModule('toolbar').addHandler('image', function(){
+// function imageHandler(){
 //     const input = document.createElement('input');
 //     input.setAttribute('type', 'file');
 //     input.setAttribute('accept', 'image/*');
@@ -135,7 +85,57 @@ function imageHandler(){
 //             console.error('이미지 업로드 오류:', error);
 //         }
 //     };
-// });
+// };
+
+
+editor.getModule('toolbar').addHandler('image', function(){
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+        console.log(file);
+        try {
+            const response = await fetch('/uploadImage', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            let data;
+
+            try {
+                // 서버 응답이 JSON인지 확인
+                data = await response.json();
+            } catch (jsonError) {
+                console.error('서버에서 JSON 파싱 오류:', jsonError);
+
+                // JSON 파싱 실패 시에 대한 처리 추가
+                throw new Error('서버 응답이 JSON 형식이 아닙니다.');
+            }
+
+            if (!data.url) {
+                throw new Error('Invalid response format');
+            }
+            console.log(data.url);
+            let range = this.quill.getSelection(true);
+            this.quill.insertEmbed(range.index, 'image', data.url);
+            sumImageList.push(data.path);
+        } catch (error) {
+            console.error('이미지 업로드 오류:', error);
+        }
+    };
+});
 
 // 이미지 삭제 (fileList, Set타입 리스트, delete or other, 디렉토리 이름)
 const deleteImages = async (fileList, myImages, confirm) => {
@@ -178,7 +178,7 @@ const extractionValue = (items) => {
     return currentImgList;
 }
 
-const submitBth = document.querySelector('#submit-btn');
+const submitBth = document.querySelector('#submit-btn-create');
 const cancelBth = document.querySelector('#cancel-btn');
 
 cancelBth.addEventListener('click', () => {
@@ -191,27 +191,94 @@ window.addEventListener('beforeunload', (event) => {
 });
 
 
-document.querySelector('#create-form').addEventListener('submit', function(event) {
+submitBth.addEventListener('click', () => {
 
-    event.preventDefault();
+    let formData = new FormData();
     
     const title = document.querySelector('#title').value;
-    const context = document.querySelector('#context');
-    const contentValue = editor.getContents().ops;
-    const stringContent = JSON.stringify(contentValue);
-    context.value = stringContent;
+    const content = editor.getContents().ops;
 
-    let currentImgList = extractionValue(contentValue);
+    let currentImgList = extractionValue(content);
 
-    if(currentImgList.length !== sumImageList.length){
+    if(sumImageList.length !== 0){
         deleteImages(sumImageList, new Set(currentImgList), 'others');
     }
 
-    if (title === '' || (( contentValue.length === 1  && contentValue[0]['insert'].trim() === ''))){
+    if (title === '' || (( content.length === 1  && content[0]['insert'].trim() === ''))){
         return alert('입력창을 확인하세요');
     } 
 
-    sumImageList = [];
-    this.submit();
+    formData.append('title', title);
+    formData.append('content', JSON.stringify(content));
 
+    console.log(currentImgList, content)
+
+    fetch('/post', {
+        method: 'POST', // 요청 방식 지정(GET, POST 등)
+        body: formData, // 서버로 보낼 데이터
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+        },
+    })
+    // .then(response => response.json()) // 응답을 JSON 형식으로 파싱
+    // .then(data => {
+    //     console.log(data); // 파싱된 데이터 출력
+    //     // if(data.msg === 'success') {
+    //     //     sumImageList = [];
+    //         window.location.href = '/post'; // 원하는 페이지 URL로 변경해주세요.
+    //     // }
+    // })
+    .catch(error => { 
+        console.error('Error:', error);
+    }); // 에러 처리
 });
+
+// document.querySelector('#create-form').addEventListener('submit', function(event) {
+
+//     event.preventDefault();
+    
+//     const title = document.querySelector('#title').value;
+//     const context = document.querySelector('#context-create');
+//     const contentValue = editor.getContents().ops;
+//     const stringContent = JSON.stringify(contentValue);
+//     context.value = stringContent;
+//     console.log(context)
+//     let currentImgList = extractionValue(contentValue);
+
+//     if(currentImgList.length !== sumImageList.length){
+//         deleteImages(sumImageList, new Set(currentImgList), 'others');
+//     }
+
+//     if (title === '' || (( contentValue.length === 1  && contentValue[0]['insert'].trim() === ''))){
+//         return alert('입력창을 확인하세요');
+//     } 
+
+//     this.submit();
+//     sumImageList = [];
+
+// });
+
+
+// document.querySelector('#update-form').addEventListener('submit', function (event){
+//     event.preventDefault();
+    
+//     const title = document.querySelector('#title').value;
+//     const context = document.querySelector('#context');
+//     const contentValue = editor.getContents().ops;
+//     const stringContent = JSON.stringify(contentValue);
+//     context.value = stringContent;
+
+//     let currentImgList = extractionValue(contentValue);
+
+//     if(currentImgList.length !== sumImageList.length){
+//         deleteImages(sumImageList, new Set(currentImgList), 'others');
+//     }
+
+//     if (title === '' || (( contentValue.length === 1  && contentValue[0]['insert'].trim() === ''))){
+//         return alert('입력창을 확인하세요');
+//     } 
+
+//     sumImageList = [];
+//     this.submit();
+    
+// });

@@ -13,9 +13,9 @@ class PostController extends Controller
 
     public function index()
     {
-        // $posts = Post::all();
+        $posts = Post::all();
         // $posts->sortBy('created_at');
-        $posts = Post::orderBy('created_at', 'desc')->paginate(10);
+        $posts = Post::orderBy('created_at', 'desc')->get();
 
         return view('posts.index', ['posts' => $posts]);
     }
@@ -27,36 +27,38 @@ class PostController extends Controller
 
     public function store(Request $request)
     {   
-        $inputs = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
-            'context' => 'required',
+            'content' => 'required',
         ]);
 
-        try{
+        // try{
             $post = new post();
-            $post->title = $inputs['title'];
-            $post->content = $inputs['context'];
+            $post->title = $request->title;
+            $post->content = $request->content;
             $post->user_id = Auth::id();
 
             $post->save();
 
             // 성공 응답 반환
             return redirect('/post');
-        } catch(Exception $e){
-            // 실패 응답 반환
-            return response()->json(['msg' => 'failed', 'error' => $e->getMessage()]);
-        }
+        // } catch(Exception $e){
+        //     // 실패 응답 반환
+        //     return response()->json(['msg' => 'failed', 'error' => $e->getMessage()]);
+        // }
     }
 
     public function show(string $id)
     {
-        $post = Post::find($id)->first();
+        
+        $post = Post::find($id);
+        // dd($post);
         return view('posts.show', ['post' => $post]);
     }
 
     public function edit(string $id)
     {
-        $post = Post::find($id)->first();
+        $post = Post::find($id);
         return view('posts.updateForm', ['post' => $post]);
     }
 

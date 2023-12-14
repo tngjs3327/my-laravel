@@ -17,12 +17,13 @@ class ImageController extends Controller
 
     public function uploadImage(Request $request)
     {
-        $result = $request->validate([
+        $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif',
         ]);
         
         $file = $request->file('image');
-        $imageName = uniqid('image_') . '.' . $file->getClientOriginalExtension();
+
+        $imageName = uniqid('image_').'.' . $file->getClientOriginalExtension();
 
         $path = 'images/' . $imageName;
 

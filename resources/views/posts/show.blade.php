@@ -10,6 +10,11 @@
     <link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     @vite(['resources/js/showQuill.js', 'resources/css/quill.css'])
 
+    <link rel="stylesheet" href="{{ asset('resources/css/quill.css') }}">
+
+        <script src="{{ asset('resources//js/showQuill.js') }}" defer></script>
+    {{-- <script src="resources/js/showQuill.js" ></script>
+    <link href="resources/css/quill.css" rel="stylesheet"> --}}
     <div class="max-w-[900px] mx-auto my-10 p-8 bg-white shadow-2xl rounded-lg border border-gray-200">
         <div class="hidden" id="post-data" data-post="{{ json_encode($post) }}"></div>
         

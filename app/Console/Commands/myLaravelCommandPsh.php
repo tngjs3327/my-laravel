@@ -11,14 +11,18 @@ class myLaravelCommandPsh extends Command
      *
      * @var string
      */
-    protected $signature = 'app:my-laravel-command-psh';
+    // protected $signature = 'app:my-laravel-command-psh';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    // protected $description = 'Command description';
+
+    protected $signature = 'serve:local';
+    protected $description = 'Serve the application on the local network';
+
 
     /**
      * Execute the console command.

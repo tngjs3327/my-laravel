@@ -13,6 +13,10 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <link rel="stylesheet" href="{{ asset('/resources/css/app.css') }}">
+
+        <script src="{{ asset('/resources/js/app.js') }}" defer></script>
+        
     </head>
     <body class="font-sans antialiased max-h-screen pb-20">
         {{-- <div class="min-h-screen bg-gray-100 h-full dark:bg-gray-900"> --}}
